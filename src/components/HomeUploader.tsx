@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Upload, FileText, Image as ImageIcon, Copy, Check, Printer, Download, Languages, MessageSquare, RefreshCw, AlertCircle, FileCheck } from 'lucide-react';
+import { Upload, FileText, Copy, Check, Printer, Download, Languages, MessageSquare, RefreshCw, AlertCircle, FileCheck } from 'lucide-react';
 import { DocumentResult } from '../types';
 
 interface HomeUploaderProps {
@@ -7,9 +7,10 @@ interface HomeUploaderProps {
   setCurrentDoc: (doc: DocumentResult | null) => void;
   onNavigateTab: (tab: string) => void;
   onSaveDoc: (doc: DocumentResult) => void;
+  onActionSuccess: () => void;
 }
 
-export const HomeUploader: React.FC<HomeUploaderProps> = ({ currentDoc, setCurrentDoc, onNavigateTab, onSaveDoc }) => {
+export const HomeUploader: React.FC<HomeUploaderProps> = ({ currentDoc, setCurrentDoc, onNavigateTab, onSaveDoc, onActionSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [progressText, setProgressText] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -22,14 +23,13 @@ export const HomeUploader: React.FC<HomeUploaderProps> = ({ currentDoc, setCurre
 
     setLoading(true);
     setErrorMsg('');
-    setProgressText('جاري رفع المستند وقراءته عبر محرك الذكاء الاصطناعي (OCR)...');
+    setProgressText('جاري رفع المستند وقراءته عبر محرك OCR مع الخصم الآمن للحصص...');
 
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('prompt', 'قم بقراءة كامل المستند أو الصورة بدقة استثنائية، مستخرجاً جميع النصوص، الأرقام، التواريخ، الجداول، والأختام بدقة متناهية. لا تختلق أي شيء، وضع علامة [غير واضح] عند تعذر قراءة جزء.');
+    formData.append('prompt', 'قم بقراءة كامل المستند أو الصورة بدقة استثنائية، مستخرجاً جميع النصوص، الأرقام، التواريخ، الجداول، والأختام بدقة متناهية. لا تختلق أي شيء، وضع علامة [غير واضح] عند تعذر قراءة أي جزء.');
 
     try {
-      setProgressText('جاري تحليل محتوى الملف واستخراج النصوص والجداول...');
       const res = await fetch('/api/analyze', {
         method: 'POST',
         body: formData,
@@ -52,10 +52,11 @@ export const HomeUploader: React.FC<HomeUploaderProps> = ({ currentDoc, setCurre
 
       setCurrentDoc(newDoc);
       onSaveDoc(newDoc);
+      onActionSuccess(); // Refresh credit balance
       setProgressText('');
     } catch (err: any) {
       console.error(err);
-      setErrorMsg(err.message || 'حدث خطأ أثناء الاتصال بالخادم وقراءة الملف.');
+      setErrorMsg(err.message || 'حدث خطأ أثناء معالجة المستند.');
     } finally {
       setLoading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -111,10 +112,10 @@ export const HomeUploader: React.FC<HomeUploaderProps> = ({ currentDoc, setCurre
           📜
         </div>
         <h2 className="text-2xl sm:text-3xl font-bold font-amiri text-[#F5E5BD] mb-3">
-          المساعد الذكي لقراءة المستندات والصور
+          محرك القراءة الذكي ATYA OCR
         </h2>
         <p className="text-sm sm:text-base text-[#F5E5BD]/80 max-w-2xl mx-auto leading-relaxed">
-          ارفع أي مستند (PDF, Word, Excel, TXT, CSV) أو صورة (JPG, PNG, WEBP, TIFF) ليقوم محرك الذكاء الاصطناعي بقراءتها بدقة استثنائية، استخراج النصوص، الجداول، الأختام، والتواريخ فوراً.
+          ارفع أي مستند (PDF, Word, Excel, TXT) أو صورة لاستخراج النصوص بدقة استثنائية مع الخصم الآمن من رصيد حصص الذكاء الاصطناعي.
         </p>
 
         {/* Upload Box */}
@@ -139,12 +140,12 @@ export const HomeUploader: React.FC<HomeUploaderProps> = ({ currentDoc, setCurre
             ) : (
               <>
                 <Upload className="w-6 h-6" />
-                <span>اختر مستندًا أو صورة للرفع والقراءة الفورية</span>
+                <span>اختر مستندًا أو صورة للرفع وقراءة OCR</span>
               </>
             )}
           </button>
           <p className="text-[11px] text-[#F5E5BD]/60 mt-2">
-            يدعم: PDF, DOCX, XLSX, TXT, CSV, JPG, PNG, WEBP, TIFF حتى 25 ميجابايت
+            يدعم: PDF, DOCX, XLSX, TXT, CSV, JPG, PNG حتى 25 ميجابايت (تكلفة: 1 حصة)
           </p>
         </div>
       </div>
@@ -160,7 +161,6 @@ export const HomeUploader: React.FC<HomeUploaderProps> = ({ currentDoc, setCurre
       {/* Current Document Result View */}
       {currentDoc ? (
         <div className="bg-[#24140f] border border-[#D4AF37]/30 rounded-3xl p-6 shadow-xl space-y-6">
-          {/* Header Info */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-[#3A241B]">
             <div>
               <div className="flex items-center gap-2">
@@ -168,11 +168,10 @@ export const HomeUploader: React.FC<HomeUploaderProps> = ({ currentDoc, setCurre
                 <h3 className="text-lg font-bold text-[#F5E5BD]">{currentDoc.fileName}</h3>
               </div>
               <p className="text-xs text-[#F5E5BD]/60 mt-1">
-                تاريخ المعالجة: {currentDoc.createdAt} | عدد الصفحات / الأجزاء: {currentDoc.pagesCount} | الحجم: {currentDoc.fileSize || 'غير معروف'}
+                تاريخ المعالجة: {currentDoc.createdAt} | الصفحات: {currentDoc.pagesCount} | الحجم: {currentDoc.fileSize || 'غير معروف'}
               </p>
             </div>
 
-            {/* Action Buttons Toolbar */}
             <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={handleCopyFullText}
@@ -224,7 +223,6 @@ export const HomeUploader: React.FC<HomeUploaderProps> = ({ currentDoc, setCurre
             </div>
           </div>
 
-          {/* Extracted Text Display Area */}
           <div className="space-y-2">
             <label className="text-xs font-bold text-[#D4AF37] block">النص المستخرج والمحلل بدقة:</label>
             <div className="bg-[#1a0e0b] border border-[#D4AF37]/20 rounded-2xl p-4 sm:p-6 text-[#F5E5BD] font-amiri text-base sm:text-lg leading-relaxed whitespace-pre-wrap max-h-[500px] overflow-y-auto selection:bg-[#D4AF37]/40">
@@ -236,7 +234,7 @@ export const HomeUploader: React.FC<HomeUploaderProps> = ({ currentDoc, setCurre
         <div className="bg-[#24140f] border border-[#D4AF37]/20 rounded-3xl p-12 text-center text-[#F5E5BD]/60 space-y-3">
           <div className="text-4xl">📂</div>
           <p className="text-base font-medium">لم يتم رفع أي مستند بعد.</p>
-          <p className="text-xs text-[#F5E5BD]/40">قم برفع ملف أو صورة أعلاه لبدء القراءة الفورية بالذكاء الاصطناعي.</p>
+          <p className="text-xs text-[#F5E5BD]/40">قم برفع ملف أو صورة أعلاه لبدء قراءة OCR.</p>
         </div>
       )}
     </div>

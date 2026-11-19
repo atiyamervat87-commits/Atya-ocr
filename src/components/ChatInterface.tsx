@@ -4,14 +4,15 @@ import { ChatMessage, DocumentResult } from '../types';
 
 interface ChatInterfaceProps {
   currentDoc: DocumentResult | null;
+  onActionSuccess: () => void;
 }
 
-export const ChatInterface: React.FC<ChatInterfaceProps> = ({ currentDoc }) => {
+export const ChatInterface: React.FC<ChatInterfaceProps> = ({ currentDoc, onActionSuccess }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
       role: 'model',
-      content: 'أهلاً بك. أنا "المستشار عطيه الهلباوي" - عبقرينو. أنا هنا لمساعدتك في قراءة المستندات، تحليل النصوص، الإجابة عن الأسئلة القانونية والتقنية، وتلخيص الملفات المرفقة بدقة تامة. كيف يمكنني خدمتك اليوم؟',
+      content: 'أهلاً بك. أنا "المستشار عطيه الهلباوي" - عبقرينو. أنا هنا لمساعدتك في قراءة المستندات، تحليل النصوص، والإجابة عن الأسئلة القانونية والتقنية بدقة تامة. كيف يمكنني خدمتك اليوم؟',
       timestamp: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
@@ -68,6 +69,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ currentDoc }) => {
       };
 
       setMessages([...newMessages, modelMsg]);
+      onActionSuccess();
     } catch (err: any) {
       console.error(err);
       setErrorMsg(err.message || 'حدث خطأ أثناء المحادثة.');
@@ -98,7 +100,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ currentDoc }) => {
 
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-6 flex flex-col h-[calc(100vh-100px)]">
-      {/* Header Bar */}
       <div className="bg-[#2B1914] border border-[#D4AF37]/30 rounded-2xl p-4 mb-4 flex items-center justify-between shadow-lg">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/20 border border-[#D4AF37] flex items-center justify-center text-[#D4AF37]">
@@ -115,14 +116,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ currentDoc }) => {
         <button
           onClick={handleClearChat}
           className="px-3 py-1.5 rounded-lg bg-rose-950/80 text-rose-200 hover:bg-rose-900 border border-rose-500/40 text-xs flex items-center gap-1.5 cursor-pointer transition"
-          title="مسح المحادثة"
         >
           <Trash2 className="w-4 h-4" />
           <span>مسح المحادثة</span>
         </button>
       </div>
 
-      {/* Active Document Context Banner */}
       {currentDoc && (
         <div className="bg-[#3A241B] border border-[#D4AF37]/40 rounded-xl p-3 mb-3 flex items-center justify-between text-xs text-[#F5E5BD]">
           <div className="flex items-center gap-2 truncate">
@@ -133,7 +132,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ currentDoc }) => {
         </div>
       )}
 
-      {/* Messages Scroll Area */}
       <div className="flex-1 bg-[#24140f] border border-[#D4AF37]/20 rounded-3xl p-4 sm:p-6 overflow-y-auto space-y-4 shadow-xl">
         {messages.map((msg) => (
           <div
@@ -191,7 +189,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ currentDoc }) => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Suggested Prompts */}
       {currentDoc && (
         <div className="flex flex-wrap gap-2 my-3">
           {suggestedPrompts.map((prompt, idx) => (
@@ -208,7 +205,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ currentDoc }) => {
         </div>
       )}
 
-      {/* Input Box */}
       <div className="mt-3 flex gap-2">
         <input
           type="text"

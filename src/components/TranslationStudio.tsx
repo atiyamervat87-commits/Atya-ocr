@@ -4,9 +4,10 @@ import { DocumentResult } from '../types';
 
 interface TranslationStudioProps {
   currentDoc: DocumentResult | null;
+  onActionSuccess: () => void;
 }
 
-export const TranslationStudio: React.FC<TranslationStudioProps> = ({ currentDoc }) => {
+export const TranslationStudio: React.FC<TranslationStudioProps> = ({ currentDoc, onActionSuccess }) => {
   const [sourceText, setSourceText] = useState(currentDoc ? currentDoc.text : '');
   const [targetLang, setTargetLang] = useState('الإنجليزية');
   const [sourceLang, setSourceLang] = useState('العربية');
@@ -40,9 +41,10 @@ export const TranslationStudio: React.FC<TranslationStudioProps> = ({ currentDoc
       }
 
       setTranslation(data.translation);
+      onActionSuccess();
     } catch (err: any) {
       console.error(err);
-      setErrorMsg(err.message || 'حدث خطأ أثناء الاتصال بالخادم للترجمة.');
+      setErrorMsg(err.message || 'حدث خطأ أثناء الترجمة.');
     } finally {
       setLoading(false);
     }
@@ -66,7 +68,6 @@ export const TranslationStudio: React.FC<TranslationStudioProps> = ({ currentDoc
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
-      {/* Header */}
       <div className="bg-[#2B1914] border border-[#D4AF37]/30 rounded-3xl p-6 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37] flex items-center justify-center text-[#D4AF37]">
@@ -74,7 +75,7 @@ export const TranslationStudio: React.FC<TranslationStudioProps> = ({ currentDoc
           </div>
           <div>
             <h2 className="text-xl font-bold font-amiri text-[#F5E5BD]">استوديو الترجمة الفورية الاحترافية</h2>
-            <p className="text-xs text-[#D4AF37]">ترجمة دقيقة تحافظ على الأسماء والأرقام والمبالغ والتواريخ</p>
+            <p className="text-xs text-[#D4AF37]">ترجمة دقيقة تحافظ على الأسماء والأرقام والمبالغ مع الخصم الآمن</p>
           </div>
         </div>
 
@@ -89,7 +90,6 @@ export const TranslationStudio: React.FC<TranslationStudioProps> = ({ currentDoc
         )}
       </div>
 
-      {/* Controls Bar */}
       <div className="bg-[#24140f] border border-[#D4AF37]/30 rounded-2xl p-4 grid grid-cols-1 sm:grid-cols-4 gap-4 shadow-lg">
         <div>
           <label className="text-xs font-bold text-[#D4AF37] block mb-1">اللغة الأصلية:</label>
@@ -155,9 +155,7 @@ export const TranslationStudio: React.FC<TranslationStudioProps> = ({ currentDoc
         </div>
       )}
 
-      {/* Side-by-Side Editors / Viewers */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Source Text Box */}
         <div className="bg-[#24140f] border border-[#D4AF37]/30 rounded-3xl p-5 shadow-xl flex flex-col space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-[#D4AF37]">النص الأصلي:</span>
@@ -172,7 +170,6 @@ export const TranslationStudio: React.FC<TranslationStudioProps> = ({ currentDoc
           />
         </div>
 
-        {/* Translation Output Box */}
         <div className="bg-[#24140f] border border-[#D4AF37]/30 rounded-3xl p-5 shadow-xl flex flex-col space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-[#D4AF37]">الترجمة المستهدفة ({targetLang}):</span>
@@ -200,7 +197,7 @@ export const TranslationStudio: React.FC<TranslationStudioProps> = ({ currentDoc
             {loading ? (
               <div className="flex flex-col items-center justify-center h-full text-[#D4AF37] gap-2">
                 <RefreshCw className="w-8 h-8 animate-spin" />
-                <span className="text-xs">جاري الترجمة الفورية...</span>
+                <span className="text-xs">جاري الترجمة الفورية والخصم الآمن...</span>
               </div>
             ) : translation ? (
               translation
