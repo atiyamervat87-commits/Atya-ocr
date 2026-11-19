@@ -1,0 +1,6 @@
+{
+  "name": "Smart Document Reader & Translator",
+  "description": "المساعد الذكي لقراءة المستندات والصور وترجمتها بدقة عالية باستخدام الذكاء الاصطناعي",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
