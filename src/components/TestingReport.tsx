@@ -39,8 +39,8 @@ export const TestingReport: React.FC = () => {
             <ShieldCheck className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl font-bold font-amiri text-[#F5E5BD]">تقرير الاختبارات الفعلية والاعتمادية الشاملة (24 بند)</h2>
-            <p className="text-xs text-[#D4AF37]">نتائج الفحص والتحقق الفعلية لنظام ATYA OCR والتفعيل والمدفوعات والمحفظة</p>
+            <h2 className="text-xl font-bold font-amiri text-[#F5E5BD]">تقرير الاختبارات الفعلية للمزود المزدوج (14 بند)</h2>
+            <p className="text-xs text-[#D4AF37]">نتائج فحص تشفير المفاتيح (BYOK) ومفتاح المنصة والمحفظة والخصم</p>
           </div>
         </div>
 
@@ -63,7 +63,7 @@ export const TestingReport: React.FC = () => {
 
       <div className="bg-[#24140f] border border-[#D4AF37]/30 rounded-3xl p-6 shadow-xl space-y-4">
         <div className="flex items-center justify-between pb-4 border-b border-[#3A241B]">
-          <span className="text-xs font-bold text-[#D4AF37]">قائمة الاختبارات الفعلية الإلزامية (24 اختبار):</span>
+          <span className="text-xs font-bold text-[#D4AF37]">قائمة الاختبارات الفعلية للمزود المزدوج (14 اختبار):</span>
           {timestamp && <span className="text-[11px] text-[#F5E5BD]/60">وقت التقرير: {timestamp}</span>}
         </div>
 

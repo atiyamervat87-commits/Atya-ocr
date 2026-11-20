@@ -9,6 +9,7 @@ import { AuthModal } from './components/AuthModal';
 import { ActivationScreen } from './components/ActivationScreen';
 import { WalletView } from './components/WalletView';
 import { AdminPanel } from './components/AdminPanel';
+import { AiSettingsView } from './components/AiSettingsView';
 import { User, DocumentResult } from './types';
 import { RefreshCw } from 'lucide-react';
 
@@ -95,12 +96,10 @@ export default function App() {
     );
   }
 
-  // If not logged in, show Auth modal
   if (!user) {
     return <AuthModal onLoginSuccess={(loggedInUser) => setUser(loggedInUser)} />;
   }
 
-  // If logged in but not active, show Activation Screen
   if (!user.is_active) {
     return (
       <div className="min-h-screen flex flex-col bg-[#1a0e0b] text-[#F5E5BD]">
@@ -167,6 +166,10 @@ export default function App() {
               <TranslationStudio currentDoc={currentDoc} onActionSuccess={checkAuth} />
             )}
 
+            {activeTab === 'ai_settings' && (
+              <AiSettingsView />
+            )}
+
             {activeTab === 'saved' && (
               <SavedDocs
                 savedDocs={savedDocs}
@@ -189,7 +192,7 @@ export default function App() {
 
       <footer className="bg-[#2B1914] border-t border-[#D4AF37]/30 py-4 px-6 text-center text-xs text-[#D4AF37] no-print">
         <p>
-          المستشار عطيه الهلباوي | ATYA OCR — نظام الحسابات والتفعيل ومحفظة الحصص © {new Date().getFullYear()}
+          المستشار عطيه الهلباوي | ATYA OCR — المزود المزدوج لـ Gemini AI © {new Date().getFullYear()}
         </p>
       </footer>
     </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Scale, MessageSquare, Languages, FileText, CheckSquare, Printer, LogOut, Coins, ShieldCheck } from 'lucide-react';
+import { MessageSquare, Languages, FileText, CheckSquare, Printer, LogOut, Coins, ShieldCheck, Cpu } from 'lucide-react';
 import { User } from '../types';
 
 interface NavbarProps {
@@ -23,7 +23,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, user, o
               المستشار عطيه الهلباوي | ATYA OCR
             </h1>
             <p className="text-[11px] text-[#D4AF37]">
-              النظام الملكي الذكي لإدارة المحاماة وقراءة المستندات
+              النظام الملكي الذكي — المزود المزدوج لـ Gemini AI
             </p>
           </div>
         </div>
@@ -61,6 +61,16 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, user, o
                 <Languages className="w-4 h-4" />
                 <span>الترجمة الفورية</span>
               </button>
+
+              <button
+                onClick={() => setActiveTab('ai_settings')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
+                  activeTab === 'ai_settings' ? 'bg-[#D4AF37] text-[#2B1914] shadow' : 'text-[#F5E5BD] hover:bg-[#3A241B]'
+                }`}
+              >
+                <Cpu className="w-4 h-4" />
+                <span>إعدادات الذكاء الاصطناعي</span>
+              </button>
             </>
           ) : (
             <span className="text-xs text-amber-400 font-bold bg-amber-950/60 px-3 py-1 rounded-lg border border-amber-500/30">
@@ -75,7 +85,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, user, o
             }`}
           >
             <CheckSquare className="w-4 h-4" />
-            <span>تقرير الاختبارات</span>
+            <span>تقرير الاختبارات (14)</span>
           </button>
 
           {user && user.role === 'admin' && (
