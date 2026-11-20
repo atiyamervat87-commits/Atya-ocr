@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldAlert, CreditCard, Send, CheckCircle2, AlertCircle, RefreshCw, Smartphone } from 'lucide-react';
+import { ShieldAlert, CreditCard, Send, CheckCircle2, AlertCircle, RefreshCw, Smartphone, Sparkles } from 'lucide-react';
 import { User } from '../types';
 
 interface ActivationScreenProps {
@@ -33,8 +33,13 @@ export const ActivationScreen: React.FC<ActivationScreenProps> = ({ user, onRefr
     }
 
     try {
+      const token = localStorage.getItem('atya_token');
       const res = await fetch('/api/activation/request', {
         method: 'POST',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
         body: formData,
       });
 
@@ -52,6 +57,31 @@ export const ActivationScreen: React.FC<ActivationScreenProps> = ({ user, onRefr
     }
   };
 
+  const handleDevBypass = async () => {
+    setLoading(true);
+    setErrorMsg('');
+    try {
+      const token = localStorage.getItem('atya_token');
+      const res = await fetch('/api/activation/dev-bypass', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'فشل تفعيل المطور.');
+      }
+      onRefreshUser();
+    } catch (err: any) {
+      setErrorMsg(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto p-4 sm:p-6 space-y-6">
       <div className="bg-[#2B1914] border border-[#D4AF37]/50 rounded-3xl p-6 sm:p-8 shadow-2xl text-center relative overflow-hidden">
@@ -62,8 +92,21 @@ export const ActivationScreen: React.FC<ActivationScreenProps> = ({ user, onRefr
           تفعيل الحساب مطلوب (رسوم التفعيل الملكية: 500 جنيه)
         </h2>
         <p className="text-sm text-[#F5E5BD]/80 max-w-xl mx-auto leading-relaxed">
-          عزيزي العميل، لاستخدام خدمات المنصة الملكية الذكية (OCR، الترجمة، المحادثة، وتحليل المستندات)، يرجى سداد رسوم التفعيل لمرة واحدة فقط.
+          عزيزي العميل، لاستخدام خدمات المنصة الملكية الذكية، يرجى سداد رسوم التفعيل لمرة واحدة فقط.
         </p>
+
+        {/* Developer Free Access Bypass Button */}
+        <div className="mt-6 p-4 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/40 max-w-md mx-auto space-y-2">
+          <p className="text-xs text-[#D4AF37] font-bold">بصفتك مطور النظام (صاحب الجهاز)، يمكنك الدخول والتفعيل مجاناً فوراً:</p>
+          <button
+            onClick={handleDevBypass}
+            disabled={loading}
+            className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#E7C779] text-[#2B1914] font-bold text-xs shadow-lg transition flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>تفعيل فوري مجاني للمطور (بدون رسوم)</span>
+          </button>
+        </div>
 
         {/* Payment Details Card */}
         <div className="mt-6 bg-[#24140f] border border-[#D4AF37]/40 rounded-2xl p-5 text-right max-w-lg mx-auto space-y-3 shadow-lg">
@@ -84,7 +127,6 @@ export const ActivationScreen: React.FC<ActivationScreenProps> = ({ user, onRefr
         </div>
       </div>
 
-      {/* Status Box or Form */}
       {activeReq ? (
         <div className="bg-[#24140f] border border-[#D4AF37]/40 rounded-3xl p-6 sm:p-8 shadow-xl space-y-4">
           <div className="flex items-center gap-3 pb-4 border-b border-[#3A241B]">
@@ -145,7 +187,7 @@ export const ActivationScreen: React.FC<ActivationScreenProps> = ({ user, onRefr
 
           <form onSubmit={handleSubmitRequest} className="space-y-4">
             <div>
-              <label className="text-xs font-bold text-[#D4AF37] block mb-1">رقم العملية أو مرجع التحويل (من رسالة فودافون كاش / إنستاباي / المحفظة):</label>
+              <label className="text-xs font-bold text-[#D4AF37] block mb-1">رقم العملية أو مرجع التحويل:</label>
               <input
                 type="text"
                 required

@@ -24,9 +24,14 @@ export const TranslationStudio: React.FC<TranslationStudioProps> = ({ currentDoc
     setErrorMsg('');
 
     try {
+      const token = localStorage.getItem('atya_token');
       const res = await fetch('/api/translate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
         body: JSON.stringify({
           text: sourceText,
           sourceLang,

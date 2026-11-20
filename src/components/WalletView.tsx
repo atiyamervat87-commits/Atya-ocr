@@ -18,10 +18,16 @@ export const WalletView: React.FC<WalletViewProps> = ({ balance, onUpdateBalance
   const fetchWallet = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/wallet');
+      const token = localStorage.getItem('atya_token');
+      const res = await fetch('/api/wallet', {
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
+      });
       const data = await res.json();
       if (res.ok && data.success) {
-        setTransactions(data.transactions);
+        setTransactions(data.transactions || []);
       }
     } catch (err) {
       console.error(err);
@@ -40,9 +46,14 @@ export const WalletView: React.FC<WalletViewProps> = ({ balance, onUpdateBalance
     setErrorMsg('');
 
     try {
+      const token = localStorage.getItem('atya_token');
       const res = await fetch('/api/wallet/top-up', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
         body: JSON.stringify({ amount: Number(topUpAmount), reference: topUpRef }),
       });
 
@@ -61,9 +72,10 @@ export const WalletView: React.FC<WalletViewProps> = ({ balance, onUpdateBalance
     }
   };
 
+  const safeBalance = typeof balance === 'number' ? balance : 0;
+
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-6 space-y-6">
-      {/* Balance Card */}
       <div className="bg-gradient-to-br from-[#2B1914] to-[#3A241B] border border-[#D4AF37]/40 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37] flex items-center justify-center text-[#D4AF37] text-3xl shadow-inner">
@@ -77,12 +89,11 @@ export const WalletView: React.FC<WalletViewProps> = ({ balance, onUpdateBalance
 
         <div className="bg-[#24140f] border border-[#D4AF37]/50 rounded-2xl px-6 py-4 text-center shadow-xl">
           <span className="text-xs text-[#F5E5BD]/70 block mb-1">رصيدك الحالي من الحصص:</span>
-          <span className="text-3xl font-bold font-mono text-[#D4AF37]">{balance.toFixed(1)}</span>
+          <span className="text-3xl font-bold font-mono text-[#D4AF37]">{safeBalance.toFixed(1)}</span>
           <span className="text-xs text-[#E7C779] mr-1.5">حصة</span>
         </div>
       </div>
 
-      {/* Top Up Section */}
       <div className="bg-[#24140f] border border-[#D4AF37]/30 rounded-3xl p-6 shadow-xl space-y-4">
         <h3 className="text-base font-bold text-[#F5E5BD] flex items-center gap-2 border-b border-[#3A241B] pb-3">
           <PlusCircle className="w-5 h-5 text-[#D4AF37]" />
@@ -136,7 +147,6 @@ export const WalletView: React.FC<WalletViewProps> = ({ balance, onUpdateBalance
         </form>
       </div>
 
-      {/* Transactions History */}
       <div className="bg-[#24140f] border border-[#D4AF37]/30 rounded-3xl p-6 shadow-xl space-y-4">
         <h3 className="text-base font-bold text-[#F5E5BD] flex items-center gap-2 border-b border-[#3A241B] pb-3">
           <History className="w-5 h-5 text-[#D4AF37]" />

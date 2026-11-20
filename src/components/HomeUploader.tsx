@@ -30,8 +30,13 @@ export const HomeUploader: React.FC<HomeUploaderProps> = ({ currentDoc, setCurre
     formData.append('prompt', 'قم بقراءة كامل المستند أو الصورة بدقة استثنائية، مستخرجاً جميع النصوص، الأرقام، التواريخ، الجداول، والأختام بدقة متناهية. لا تختلق أي شيء، وضع علامة [غير واضح] عند تعذر قراءة أي جزء.');
 
     try {
+      const token = localStorage.getItem('atya_token');
       const res = await fetch('/api/analyze', {
         method: 'POST',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
         body: formData,
       });
 
@@ -52,7 +57,7 @@ export const HomeUploader: React.FC<HomeUploaderProps> = ({ currentDoc, setCurre
 
       setCurrentDoc(newDoc);
       onSaveDoc(newDoc);
-      onActionSuccess(); // Refresh credit balance
+      onActionSuccess();
       setProgressText('');
     } catch (err: any) {
       console.error(err);
@@ -105,7 +110,6 @@ export const HomeUploader: React.FC<HomeUploaderProps> = ({ currentDoc, setCurre
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
-      {/* Hero Intro */}
       <div className="bg-gradient-to-br from-[#2B1914] to-[#3A241B] border border-[#D4AF37]/40 rounded-3xl p-6 sm:p-8 shadow-2xl text-center relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none"></div>
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37] text-[#D4AF37] text-3xl mb-4 shadow-inner">
@@ -118,7 +122,6 @@ export const HomeUploader: React.FC<HomeUploaderProps> = ({ currentDoc, setCurre
           ارفع أي مستند (PDF, Word, Excel, TXT) أو صورة لاستخراج النصوص بدقة استثنائية مع الخصم الآمن من رصيد حصص الذكاء الاصطناعي.
         </p>
 
-        {/* Upload Box */}
         <div className="mt-6 max-w-xl mx-auto">
           <input
             type="file"
@@ -150,7 +153,6 @@ export const HomeUploader: React.FC<HomeUploaderProps> = ({ currentDoc, setCurre
         </div>
       </div>
 
-      {/* Error Message */}
       {errorMsg && (
         <div className="bg-rose-950/90 border border-rose-500/50 rounded-2xl p-4 text-rose-200 flex items-center gap-3 shadow-lg">
           <AlertCircle className="w-6 h-6 shrink-0 text-rose-400" />
@@ -158,7 +160,6 @@ export const HomeUploader: React.FC<HomeUploaderProps> = ({ currentDoc, setCurre
         </div>
       )}
 
-      {/* Current Document Result View */}
       {currentDoc ? (
         <div className="bg-[#24140f] border border-[#D4AF37]/30 rounded-3xl p-6 shadow-xl space-y-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-[#3A241B]">

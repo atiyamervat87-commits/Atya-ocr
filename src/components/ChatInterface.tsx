@@ -47,9 +47,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ currentDoc, onActi
     setErrorMsg('');
 
     try {
+      const token = localStorage.getItem('atya_token');
       const res = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
         body: JSON.stringify({
           messages: newMessages.map(m => ({ role: m.role, content: m.content })),
           documentContext: currentDoc ? `اسم المستند: ${currentDoc.fileName}\nنص المستند:\n${currentDoc.text}` : null,

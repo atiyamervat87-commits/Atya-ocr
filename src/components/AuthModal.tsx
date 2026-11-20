@@ -31,6 +31,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess }) => {
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(payload),
       });
 
@@ -40,6 +41,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess }) => {
       }
 
       if (isLogin) {
+        if (data.token) {
+          localStorage.setItem('atya_token', data.token);
+        }
         onLoginSuccess(data.user);
       } else {
         setSuccessMsg(data.message || 'تم التسجيل بنجاح. يمكنك الآن تسجيل الدخول.');
@@ -68,7 +72,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess }) => {
           <p className="text-xs text-[#D4AF37] mt-1">المنصة الملكية الذكية لقراءة المستندات والترجمة</p>
         </div>
 
-        {/* Tabs */}
         <div className="grid grid-cols-2 gap-2 bg-[#1a0e0b] p-1 rounded-2xl border border-[#D4AF37]/20 mb-6">
           <button
             type="button"
