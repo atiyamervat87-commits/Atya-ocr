@@ -522,6 +522,49 @@ app.post('/api/ai-settings/test', authenticateUser, async (req, res) => {
   }
 });
 
+// Server-side route verifying integrity of both PLATFORM_API_KEY and CUSTOMER_API_KEY
+app.post('/api/ai-settings/verify-providers', authenticateUser, async (req, res) => {
+  const user: any = (req as any).user;
+  const results = {
+    platform_key: { status: 'unchecked', details: '' },
+    customer_key: { status: 'unchecked', details: '' },
+  };
+
+  // 1. Verify PLATFORM_API_KEY via environment variables
+  if (!process.env.GEMINI_API_KEY) {
+    results.platform_key = { status: 'missing', details: 'مفتاح المنصة (PLATFORM_API_KEY) غير محدد في متغيرات البيئة.' };
+  } else {
+    try {
+      const testAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY, httpOptions: { headers: { 'User-Agent': 'aistudio-build' } } });
+      await testAI.models.generateContent({ model: MODEL_NAME, contents: 'Verify platform key integrity' });
+      results.platform_key = { status: 'valid', details: 'مفتاح المنصة (PLATFORM_API_KEY) يعمل بكفاءة وتم التحقق من سلامته عبر متغيرات البيئة.' };
+    } catch (err: any) {
+      results.platform_key = { status: 'invalid', details: 'فشل التحقق من مفتاح المنصة: ' + err.message };
+    }
+  }
+
+  // 2. Verify CUSTOMER_API_KEY via database lookup and decryption
+  const settings: any = db.prepare("SELECT encrypted_api_key, provider FROM user_ai_settings WHERE user_id = ?").get(user.id);
+  if (!settings || !settings.encrypted_api_key) {
+    results.customer_key = { status: 'not_configured', details: 'لم تقم بإضافة مفتاح عميل شخصي (CUSTOMER_API_KEY / BYOK) بعد في قاعدة البيانات.' };
+  } else {
+    try {
+      const customerKey = decryptApiKey(settings.encrypted_api_key);
+      const testCustAI = new GoogleGenAI({ apiKey: customerKey, httpOptions: { headers: { 'User-Agent': 'aistudio-build' } } });
+      await testCustAI.models.generateContent({ model: MODEL_NAME, contents: 'Verify customer key integrity' });
+      results.customer_key = { status: 'valid', details: 'مفتاح العميل الشخصي (CUSTOMER_API_KEY) المُستعاد من قاعدة البيانات يعمل بكفاءة وتم التحقق من سلامته.' };
+    } catch (err: any) {
+      results.customer_key = { status: 'invalid', details: 'فشل التحقق من مفتاح العميل المستعاد من قاعدة البيانات: ' + err.message };
+    }
+  }
+
+  res.json({
+    success: true,
+    verification: results,
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.post('/api/ai-settings/delete', authenticateUser, (req, res) => {
   const user: any = (req as any).user;
   db.prepare(`

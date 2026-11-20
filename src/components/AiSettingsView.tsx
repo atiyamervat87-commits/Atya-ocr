@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Key, Shield, CheckCircle2, XCircle, RefreshCw, AlertCircle, Trash2, Cpu, HelpCircle, Save } from 'lucide-react';
+import { Key, Shield, CheckCircle2, XCircle, RefreshCw, AlertCircle, Trash2, Cpu, HelpCircle, Save, ShieldCheck } from 'lucide-react';
 
 export const AiSettingsView: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -11,6 +11,10 @@ export const AiSettingsView: React.FC = () => {
   const [logs, setLogs] = useState<any[]>([]);
   const [actionLoading, setActionLoading] = useState(false);
   const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Verification report state
+  const [verifying, setVerifying] = useState(false);
+  const [verificationResult, setVerificationResult] = useState<any>(null);
 
   const fetchSettings = async () => {
     setLoading(true);
@@ -63,6 +67,26 @@ export const AiSettingsView: React.FC = () => {
       setMsg({ type: 'error', text: err.message || 'حدث خطأ أثناء الحفظ.' });
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleVerifyBothProviders = async () => {
+    setVerifying(true);
+    setVerificationResult(null);
+    try {
+      const res = await fetch('/api/ai-settings/verify-providers', {
+        method: 'POST',
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setVerificationResult(data.verification);
+      } else {
+        alert(data.error || 'فشل التحقق من سلامة المزودين.');
+      }
+    } catch (err: any) {
+      alert('خطأ في الاتصال: ' + err.message);
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -130,18 +154,64 @@ export const AiSettingsView: React.FC = () => {
 
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-6 space-y-6">
-      {/* Header */}
-      <div className="bg-[#2B1914] border border-[#D4AF37]/40 rounded-3xl p-6 shadow-xl flex items-center justify-between">
+      <div className="bg-[#2B1914] border border-[#D4AF37]/40 rounded-3xl p-6 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37] flex items-center justify-center text-[#D4AF37]">
             <Cpu className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl font-bold font-amiri text-[#F5E5BD]">إعدادات الذكاء الاصطناعي (مزود خدمة Gemini)</h2>
-            <p className="text-xs text-[#D4AF37]">اختر بين استخدام مفتاحك الشخصي (BYOK) أو مفتاح المنصة (مع خصم الحصص)</p>
+            <h2 className="text-xl font-bold font-amiri text-[#F5E5BD]">إعدادات الذكاء الاصطناعي والتحقق من المزودين</h2>
+            <p className="text-xs text-[#D4AF37]">التحقق من سلامة PLATFORM_API_KEY و CUSTOMER_API_KEY</p>
           </div>
         </div>
+
+        <button
+          onClick={handleVerifyBothProviders}
+          disabled={verifying}
+          className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#E7C779] text-[#2B1914] text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow"
+        >
+          <ShieldCheck className={`w-4 h-4 ${verifying ? 'animate-spin' : ''}`} />
+          <span>فحص سلامة المزودين (PLATFORM & CUSTOMER)</span>
+        </button>
       </div>
+
+      {/* Verification Result Modal / Banner */}
+      {verificationResult && (
+        <div className="bg-[#24140f] border-2 border-[#D4AF37] rounded-3xl p-6 shadow-2xl space-y-4">
+          <h3 className="text-base font-bold text-[#D4AF37] flex items-center gap-2 border-b border-[#3A241B] pb-3">
+            <ShieldCheck className="w-5 h-5 text-emerald-400" />
+            <span>تقرير فحص سلامة وتكامل مزودي Gemini (Integrity Verification Report)</span>
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Platform Key Report */}
+            <div className="bg-[#1a0e0b] border border-[#D4AF37]/30 rounded-2xl p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[#F5E5BD]">1. PLATFORM_API_KEY (متغيرات البيئة):</span>
+                <span className={`px-2.5 py-0.5 rounded text-[11px] font-bold ${
+                  verificationResult.platform_key.status === 'valid' ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/40' : 'bg-rose-950 text-rose-300 border border-rose-500/40'
+                }`}>
+                  {verificationResult.platform_key.status === 'valid' ? 'صالح ومستقر ✓' : 'معطل أو مفقود ✕'}
+                </span>
+              </div>
+              <p className="text-xs text-[#F5E5BD]/70">{verificationResult.platform_key.details}</p>
+            </div>
+
+            {/* Customer Key Report */}
+            <div className="bg-[#1a0e0b] border border-[#D4AF37]/30 rounded-2xl p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[#F5E5BD]">2. CUSTOMER_API_KEY (قاعدة البيانات - BYOK):</span>
+                <span className={`px-2.5 py-0.5 rounded text-[11px] font-bold ${
+                  verificationResult.customer_key.status === 'valid' ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/40' : 'bg-amber-950 text-amber-300 border border-amber-500/40'
+                }`}>
+                  {verificationResult.customer_key.status === 'valid' ? 'صالح ومستقر ✓' : 'غير مهيأ أو غير صالح'}
+                </span>
+              </div>
+              <p className="text-xs text-[#F5E5BD]/70">{verificationResult.customer_key.details}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {msg && (
         <div className={`p-4 rounded-2xl border text-xs flex items-center gap-2 ${
@@ -156,7 +226,6 @@ export const AiSettingsView: React.FC = () => {
       <div className="bg-[#24140f] border border-[#D4AF37]/30 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
         <form onSubmit={handleSave} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Platform Option */}
             <div
               onClick={() => setProvider('platform')}
               className={`border rounded-2xl p-5 cursor-pointer transition flex flex-col justify-between space-y-3 ${
@@ -166,7 +235,7 @@ export const AiSettingsView: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 font-bold text-[#F5E5BD]">
                   <Shield className="w-5 h-5 text-[#D4AF37]" />
-                  <span>مفتاح المنصة (Platform Key)</span>
+                  <span>مفتاح المنصة (PLATFORM_API_KEY)</span>
                 </div>
                 <input
                   type="radio"
@@ -177,7 +246,7 @@ export const AiSettingsView: React.FC = () => {
                 />
               </div>
               <p className="text-xs text-[#F5E5BD]/70 leading-relaxed">
-                استخدام مفتاح Google Gemini المملوك للمنصة. يتم خصم حصص الاستهلاك مباشرة من رصيد محفظة الحصص الخاصة بك (OCR = 1، ترجمة = 1، محادثة = 0.5).
+                استخدام مفتاح المنصة المعرّف عبر متغيرات البيئة. يتم خصم الحصص تلقائياً من محفظة الحصص الخاصة بك.
               </p>
               <span className={`text-[10px] px-2.5 py-1 rounded-full w-fit font-bold ${
                 platformAvailable ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/30' : 'bg-rose-950 text-rose-300 border border-rose-500/30'
@@ -186,7 +255,6 @@ export const AiSettingsView: React.FC = () => {
               </span>
             </div>
 
-            {/* BYOK Option */}
             <div
               onClick={() => setProvider('byok')}
               className={`border rounded-2xl p-5 cursor-pointer transition flex flex-col justify-between space-y-3 ${
@@ -196,7 +264,7 @@ export const AiSettingsView: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 font-bold text-[#F5E5BD]">
                   <Key className="w-5 h-5 text-[#D4AF37]" />
-                  <span>مفتاح Gemini الخاص بي (BYOK)</span>
+                  <span>مفتاح العميل الشخصي (CUSTOMER_API_KEY / BYOK)</span>
                 </div>
                 <input
                   type="radio"
@@ -207,11 +275,11 @@ export const AiSettingsView: React.FC = () => {
                 />
               </div>
               <p className="text-xs text-[#F5E5BD]/70 leading-relaxed">
-                استخدام مفتاح Gemini الخاص بك. يتم إرسال الطلبات مباشرة بمفتاحك الشخصي **دون خصم أي حصص** من محفظتك الداخلية. تُحاسب لدى Google مباشرة.
+                استخدام مفتاحك الشخصي المُخزن مشفراً في قاعدة البيانات. **لا يتم خصم أي حصص** من محفظتك الداخلية.
               </p>
               <span className={`text-[10px] px-2.5 py-1 rounded-full w-fit font-bold ${
                 keyStatus === 'valid' ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/30' :
-                keyStatus === 'invalid' ? 'bg-rose-950 text-rose-300 border border-rose-500/30' :
+                keyStatus === 'invalid' ? 'bg-rose-950 text-rose-300 border border-rose-500/40' :
                 'bg-amber-950 text-amber-300 border border-amber-500/30'
               }`}>
                 {keyStatus === 'valid' ? 'المفتاح الشخصي: محفوظ وصالح ✓' :
@@ -220,10 +288,9 @@ export const AiSettingsView: React.FC = () => {
             </div>
           </div>
 
-          {/* BYOK Input Field */}
           {provider === 'byok' && (
             <div className="space-y-3 bg-[#1a0e0b] p-5 rounded-2xl border border-[#D4AF37]/30">
-              <label className="text-xs font-bold text-[#D4AF37] block">أدخل مفتاح Gemini الشخصي (يُخزن مشفراً بالكامل على الخادم بـ AES-256-GCM):</label>
+              <label className="text-xs font-bold text-[#D4AF37] block">أدخل مفتاح العميل الشخصي (CUSTOMER_API_KEY):</label>
               <div className="flex gap-2">
                 <input
                   type="password"
@@ -245,7 +312,6 @@ export const AiSettingsView: React.FC = () => {
             </div>
           )}
 
-          {/* Action Buttons */}
           <div className="flex items-center justify-between pt-4 border-t border-[#3A241B]">
             {provider === 'byok' && keyStatus === 'valid' && (
               <button
@@ -271,7 +337,6 @@ export const AiSettingsView: React.FC = () => {
         </form>
       </div>
 
-      {/* Operation Logs */}
       <div className="bg-[#24140f] border border-[#D4AF37]/30 rounded-3xl p-6 shadow-xl space-y-4">
         <h3 className="text-base font-bold text-[#F5E5BD] border-b border-[#3A241B] pb-3 flex items-center gap-2">
           <HelpCircle className="w-5 h-5 text-[#D4AF37]" />
@@ -298,7 +363,7 @@ export const AiSettingsView: React.FC = () => {
                     <td className="py-3 px-3 font-bold text-[#F5E5BD]">{log.service_name}</td>
                     <td className="py-3 px-3">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${log.provider === 'byok' ? 'bg-amber-950 text-amber-300 border border-amber-500/30' : 'bg-blue-950 text-blue-300 border border-blue-500/30'}`}>
-                        {log.provider === 'byok' ? 'مفتاح شخصي (BYOK)' : 'مفتاح المنصة'}
+                        {log.provider === 'byok' ? 'مفتاح عميل (CUSTOMER_KEY)' : 'مفتاح المنصة (PLATFORM_KEY)'}
                       </span>
                     </td>
                     <td className="py-3 px-3">
